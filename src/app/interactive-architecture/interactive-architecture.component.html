@@ -1,0 +1,145 @@
+
+<div class="D3Container" [ngStyle]="{'z-index': ChosenGraph==='3D Scene'?-10:0}">
+    <svg #ArchSVGContainer class="D3Container"></svg>
+</div>
+<div #ArchContainer class="ArchContainer" [ngStyle]="{'z-index': ChosenGraph==='3D Scene'?0:-10}"></div>
+<div class="LayerParameterAnchor">
+    <button *ngIf="LayerHyperParameters.SelectedLayer === LayerHyperParameters.LayerArgs.length-1 && LayerHyperParameters.SelectedLayer!==-1" mat-button class="RemoveLayer" (click)="LayerHyperParameters.RemoveLayer(LayerHyperParameters.SelectedLayer)">Remove Layer</button>
+    <ng-container *ngIf="LayerHyperParameters.SelectedLayer!==-1" >
+        <mat-label class="LayerLabel">{{LayerHyperParameters.LayerArgs[LayerHyperParameters.SelectedLayer]['layertype']}} Layer {{LayerHyperParameters.SelectedLayer}}</mat-label>
+        <div *ngFor="let Key of LayerHyperParameters.GetKeys(LayerHyperParameters.SelectedLayer); let i = index" class="LayerParameterInput" [style.top] = "CalculateTop(i+2,15)">
+            <mat-form-field class="M3LayerParameterInput" *ngIf="Key!=='layertype'">
+                <mat-label>{{Key.replaceAll("_"," ")}}</mat-label>
+                <input matInput *ngIf="typeof LayerHyperParameters.LayerArgs[LayerHyperParameters.SelectedLayer][Key] === 'number'"
+                    [value]="LayerHyperParameters.LayerArgs[LayerHyperParameters.SelectedLayer][Key]"
+                    (input)="LayerHyperParameters.ChangeParameter($event,LayerHyperParameters.SelectedLayer,Key,'number')"
+                >
+                <mat-select [(ngModel)]="LayerHyperParameters.LayerArgs[LayerHyperParameters.SelectedLayer][Key]" *ngIf="typeof LayerHyperParameters.LayerArgs[LayerHyperParameters.SelectedLayer][Key] === 'string'">
+                    @for(option of StaticData.ActivationOptions; track option){
+                        <mat-option (click)="LayerHyperParameters.ChangeParameter($event,LayerHyperParameters.SelectedLayer,Key,option)" [value]="option">{{option}}</mat-option>
+                    }
+                </mat-select>
+            </mat-form-field>
+
+        </div>
+    </ng-container>
+</div>
+
+<div class="ArchitectureSettings">
+    <div class="SettingsTabs">
+        <button mat-button class="SettingsTab" (click)="SetSettings('GeneralHyperparameters')" style="left: 0;">Architecture</button>
+        <button mat-button class="SettingsTab" (click)="SetSettings('GraphsTab')" style="left: 30%;">Graphs</button>
+        <button mat-button class="SettingsTab" (click)="SetSettings('DataTab')" style="left: 60%;">Data management</button>
+    </div>
+
+    <div class="SettingsContainer" *ngIf="SelectedSetting==='DataTab'">
+        <div class="TickerControl">
+            <div class="TickerInputContainer">
+                <mat-form-field class="ParameterInputContainer">
+                    <input matInput
+                        [value]="TempTicker"
+                        (input)="SetTempTicker($event)"
+                    >
+                </mat-form-field>
+            </div>
+            <button mat-button class="AddTicker" (click)="AddTicker()">Add</button>
+            <button mat-button class="RemoveTicker" (click)="RemoveTicker()">Remove</button>
+            <div class="TickerListContainer">
+                <mat-list>
+                    <mat-list-item *ngFor="let Ticker of TickersToDownload">{{Ticker}}</mat-list-item>
+                </mat-list>
+            </div>
+        </div>
+        <div class="DownloadControl">
+            <div class="DatePickerContainers" [ngStyle]="{top:0}">
+                <mat-form-field class="FormWidth">
+                    <mat-label>Start date:</mat-label>
+                    <input matInput [matDatepicker]="StartDate" [(ngModel)]="SelectedStartDate"/>
+                    <mat-datepicker-toggle matIconSuffix [for]="StartDate"/>
+                    <mat-datepicker #StartDate/>
+                </mat-form-field>
+            </div>
+            <div class="DatePickerContainers" [ngStyle]="{top:'50%'}">
+                <mat-form-field class="FormWidth">
+                    <mat-label>End date:</mat-label>
+                    <input matInput [matDatepicker]="EndDate" [(ngModel)]="SelectedEndDate"/>
+                    <mat-datepicker-toggle matIconSuffix [for]="EndDate"/>
+                    <mat-datepicker #EndDate/>
+                </mat-form-field>
+            </div>
+            <div class="IntervalField">
+                <mat-form-field class="FormWidth">
+                    <mat-label>Interval:{{SelectedInterval}}</mat-label>
+                    <mat-select [(ngModel)]="SelectedInterval">
+                        @for(option of StaticData.IntervalOptions; track option){
+                            <mat-option [value]="option['value']">{{option['label']}}</mat-option>
+                        }
+                    </mat-select>
+                </mat-form-field>
+            </div>
+            <button mat-button class="DownloadTickers" (click)="DownloadTickers()">Download</button>
+            <mat-checkbox class="OverwriteData" [(ngModel)]="Overwrite">Overwrite pre-existing data</mat-checkbox>
+        </div>
+    </div>
+
+    <div class="SettingsContainer" *ngIf="SelectedSetting==='GraphsTab'">
+        <button mat-button class="GraphOption" (click)="SetGraph('Accuracy')" style="top:0">Accuracy</button>
+        <button mat-button class="GraphOption" (click)="SetGraph('Loss')" style="top:12%">Loss</button>
+        <button mat-button class="GraphOption" (click)="SetGraph('Prediction')" style="top:24%">Prediction</button>
+        <button mat-button class="GraphOption" (click)="SetGraph('3D Scene')" style="top:36%">3D Scene</button>
+        <!--Add data -->
+    </div>
+
+    <div class="SettingsContainer" *ngIf="SelectedSetting==='GeneralHyperparameters'">
+        <div class="AddLayerContainer">
+            <button mat-button
+                *ngFor="let option of StaticData.LayerOptions, let i=index"
+                (click)="LayerHyperParameters.AddLayer(option,HyperParameters.Settings['variables'].length)"
+                [style.left]="CalculateLeft(i,32)"
+                class="AddLayer"
+            >{{option}}</button>
+        </div>
+        @for(hyperparam of HyperParameters.SettignsKeys; track hyperparam; let i=$index){
+            <div class="HyperparameterCard" [style.left]="0" [style.top]="CalculateLeft(i+4,9)" *ngIf="typeof HyperParameters.Settings[hyperparam] === 'number'">
+                <mat-form-field class="HyperparamInputForm">
+                    <mat-label>{{hyperparam.replaceAll("_"," ")}}</mat-label>
+                    <input matInput
+                        class="HyperparameterInput"
+                        [value]="HyperParameters.Settings[hyperparam]"
+                        (input)="HyperParameters.SetSettings($event,hyperparam)"
+                    />
+                </mat-form-field>
+            </div>
+            <div 
+                class="HyperparameterDropdown" 
+                *ngIf="typeof HyperParameters.Settings[hyperparam] === 'object'"
+                [style.top]="CalculateLeft(i+3,10)"
+            >
+                <mat-form-field style="width: 200%;">
+                    <mat-label>{{hyperparam.replaceAll("_"," ")}}:</mat-label>
+                    <mat-select [(ngModel)]="HyperParameters.Settings[hyperparam]" multiple>
+                        @for(Option of DropdownDispatcher[hyperparam]; track Option){
+                            <mat-option [value]="Option">{{Option.replaceAll("_"," ")}}</mat-option>
+                        }
+                    </mat-select>
+                </mat-form-field>
+            </div>
+
+            <div 
+                class="HyperparameterDropdown"
+                *ngIf="typeof HyperParameters.Settings[hyperparam] === 'string'"
+                [style.top]="CalculateLeft(i+3,10)"
+            >
+                <mat-form-field style="width: 200%;">
+                    <mat-label>{{hyperparam.replaceAll("_"," ")}}:</mat-label>
+                    <mat-select [(ngModel)]="HyperParameters.Settings[hyperparam]">
+                        @for(Option of DropdownDispatcher[hyperparam]; track Option){
+                            <mat-option [value]="Option">{{Option.replaceAll("_"," ")}}</mat-option>
+                        }
+                    </mat-select>
+                </mat-form-field>
+            </div>
+        }
+        <button mat-button class="ConstructArchitecture"(click)="BuildRunArch()">Build and train</button>
+    </div>
+</div>
