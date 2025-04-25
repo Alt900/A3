@@ -6,8 +6,6 @@ export interface DataStructure {
     low:number,
     open:number,
     timestamp:string,
-    volume:number,
-    colorscheme:string[]
   }
 export interface PredictionData{
     Accuracy: number[][],

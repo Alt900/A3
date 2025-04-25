@@ -1,3 +1,16 @@
+//Custom libraries
+import {Interactables_3D} from '../3D_Views';
+import { GraphManager } from '../Charts';
+import {
+  DynamicInterface,
+  PredictionData,
+  HyperparameterInterface,
+  StaticDataInterface,
+  LayerHyperparametersInterface
+} from '../GlobalStateManager';
+import { Utils } from '../utils';
+
+//Angular core
 import {
   Component,
   Input,
@@ -6,29 +19,11 @@ import {
   AfterViewInit,
   SimpleChanges
 } from '@angular/core';
-
-import {
-  AccLossPlot, 
-  MultivariateChart,
-  CandleStick
-} from '../Charts';
-
-import {
-  DynamicInterface,
-  DataStructure,
-  PredictionData,
-  HyperparameterInterface,
-  StaticDataInterface,
-  LayerHyperparametersInterface
-} from '../GlobalStateManager';
-
-import {Interactables_3D} from '../3D_Views';
-
 import { CommonModule } from '@angular/common';
 import {ReactiveFormsModule, FormsModule} from '@angular/forms';
 
+//Angular material M3
 import {provideNativeDateAdapter} from '@angular/material/core';
-
 import {MatButtonModule} from '@angular/material/button';
 import {MatDatepickerModule} from '@angular/material/datepicker';
 import {MatInputModule} from '@angular/material/input';
@@ -36,11 +31,6 @@ import {MatSelectModule} from '@angular/material/select';
 import {MatCheckboxModule} from '@angular/material/checkbox';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatListModule} from '@angular/material/list';
-
-import { Utils } from '../utils';
-
-
-import * as d3 from 'd3';
 
 @Component({
   selector: 'app-interactive-architecture',
@@ -67,6 +57,7 @@ export class InteractiveArchitectureComponent implements AfterViewInit{
   StaticData: typeof StaticDataInterface = StaticDataInterface;
   HyperParameters:typeof HyperparameterInterface = HyperparameterInterface;
   LayerHyperParameters:typeof LayerHyperparametersInterface = LayerHyperparametersInterface;
+  Graphs:typeof GraphManager = GraphManager;
 
   SelectedEndDate!:Date;
   SelectedStartDate!:Date;
@@ -79,18 +70,16 @@ export class InteractiveArchitectureComponent implements AfterViewInit{
   TickersToDownload:string[]=[];
 
   PredictionData:PredictionData={Accuracy:[[]],Loss:[[]],Prediction:[]};
-  
-  viewBox = {x:0,y:0,width:0,height:0};
+
   Height:number = 0;
   Width:number = 0;
 
-  D3SVG!:d3.Selection<SVGSVGElement, unknown, null, undefined>;
   @ViewChild('ArchSVGContainer', { static: true }) SVGReference!: ElementRef<SVGSVGElement>;
   @ViewChild('ArchContainer',{static:true}) DivReference!: ElementRef<any>;
 
   DropdownDispatcher:DynamicInterface = {
     "normalization": ["Logarithmic","MinMax","Z_Score"],
-    "variables": ["open","high","low","close","volume"],
+    "variables": ["open","high","low","close"],
     "ticker": this.AvailableTickers,
     "activation": this.StaticData.ActivationOptions,
     "optimizer": this.StaticData.Optimizers,
@@ -100,13 +89,11 @@ export class InteractiveArchitectureComponent implements AfterViewInit{
   async ngAfterViewInit():Promise<void>{
     const ParentDiv:HTMLDivElement = this.DivReference.nativeElement;
     const Rect = ParentDiv.getBoundingClientRect();
-    this.D3SVG = d3.select(this.SVGReference.nativeElement);
     
     this.Width = Rect.width;
     this.Height = Rect.height;
 
-    this.viewBox.width = Rect.width;
-    this.viewBox.height = Rect.height;
+    this.Graphs.Initialize(this.SVGReference.nativeElement,Rect.width,Rect.height);
 
     Interactables_3D.InitializeScene(this.Height,this.Width,ParentDiv);
     LayerHyperparametersInterface.Three_Reference = Interactables_3D;
@@ -152,93 +139,28 @@ export class InteractiveArchitectureComponent implements AfterViewInit{
   CalculateTop(i:number,modifier?:number):string{return `${i*(modifier===undefined?1:modifier)}%`}
 
   SetGraph(chosen:string):void{
-    this.ChosenGraph = chosen;
-    if(chosen === "Loss" || chosen === "Accuracy"){
-      const dragHandler: d3.DragBehavior<SVGSVGElement, unknown, unknown> = d3.drag<SVGSVGElement, unknown>();
-      
-      dragHandler
-        .on("start",(_:any)=>{})
-        .on("drag",(e:any)=>{
-          this.viewBox.x -= e.dx;
-          this.viewBox.y -= e.dy;
-          this.D3SVG.attr('viewBox',`${this.viewBox.x} ${this.viewBox.y} ${this.Width} ${this.Height}`);
-        })
-        .on("end",(_:any)=>{});
-
-      d3.selectAll("svg > *").remove();
-
-      this.D3SVG = d3.select(this.SVGReference.nativeElement)
-        .attr("id","SVGContainer")
-        .attr("viewBox",[0,0,this.Width,this.Height])
-        .call(dragHandler);
-
-      this.D3SVG = d3.select(this.SVGReference.nativeElement).attr("viewBox",[0,0,this.Width,this.Height]);
-
-      const Data = chosen==="Accuracy"?this.PredictionData.Accuracy:this.PredictionData.Loss;
-
-      AccLossPlot(
-        this.D3SVG,
-        Data,
-        this.Width,
-        this.Height,
-        ["orange","red"],
-        ["train","test"],
-        100,
-      );
-    } else {
-      const dragHandler: d3.DragBehavior<SVGSVGElement, unknown, unknown> = d3.drag<SVGSVGElement, unknown>();
-      
-      dragHandler
-        .on("start",(_:any)=>{})
-        .on("drag",(e:any)=>{
-          this.viewBox.x -= e.dx;
-          this.viewBox.y -= e.dy;
-          this.D3SVG.attr('viewBox',`${this.viewBox.x} ${this.viewBox.y} ${this.Width} ${this.Height}`);
-        })
-        .on("end",(_:any)=>{});
-
-      d3.selectAll("svg > *").remove();
-
-      this.D3SVG = d3.select(this.SVGReference.nativeElement)
-        .attr("id","SVGContainer")
-        .attr("viewBox",[0,0,this.Width,this.Height])
-        .call(dragHandler);
-
-      this.D3SVG = d3.select(this.SVGReference.nativeElement).attr("viewBox",[0,0,this.Width,this.Height]);
-
-      const Data:number[][] = [];
-      this.HyperParameters.Settings["variables"].forEach(()=>Data.push([]));
-      this.PredictionData.Prediction.forEach((obj:DataStructure)=>{
-        this.HyperParameters.Settings["variables"].forEach((key:string,index:number)=>{
-          Data[index].push(obj[key as keyof DataStructure] as number);
-        })
-      });
-      const Colors:string[][] = this.PredictionData.Prediction.map((d:DataStructure)=>d.colorscheme);
-      if(['open','high','low','close'].every(key=>key in this.PredictionData.Prediction[0])){
-        CandleStick(
-          this.PredictionData.Prediction,
-          this.D3SVG,
-          this.Width,
-          this.Height
-        );
+    GraphManager.CleanSVG();
+    this.Graphs.ReloadSVG(this.SVGReference.nativeElement);
+    if(chosen === "Accuracy" || chosen === "Loss"){
+      this.Graphs.DrawAccLossMultivariate(chosen);
+      this.ChosenGraph = "None";
+    } else if(chosen === "Prediction"){
+      if(this.Graphs.DataDescriptor["PredictionData"]["Data"].length == 4){
+        this.Graphs.DrawBarChart();
       } else {
-        MultivariateChart(
-          this.D3SVG,
-          Data,
-          this.Width,
-          this.Height,
-          [Colors[0],Colors[Colors.length-1]],
-          this.HyperParameters.Settings["variables"],
-          Math.log(Data[0].length),
-          this.HyperParameters.Settings["prediction_steps"]
-          );
-        }
+        this.Graphs.DrawPredictionMultivariate();
       }
+      this.ChosenGraph = "None";
+    } else {
+      this.ChosenGraph = "3D Scene";
+    }
   }
 
   async BuildRunArch():Promise<void>{
+    this.Graphs.ResetDataDescriptor();
     const ParameterizedRoute:string = `CreateModel?Hyperparams=${JSON.stringify(this.HyperParameters.Settings)}&LayerArgs=${JSON.stringify(this.LayerHyperParameters.LayerArgs)}`;
-    this.PredictionData = await Utils.FetchRoute(ParameterizedRoute);
-    this.SetGraph("None");
+    const Data:PredictionData = await Utils.FetchRoute(ParameterizedRoute);
+    this.Graphs.ParsePyResponse(Data);
+    this.SetGraph("Prediction");
   }
 }
