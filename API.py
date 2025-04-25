@@ -216,30 +216,7 @@ def CreateCustomModel():
     TimeOrigin = datetime.fromtimestamp(to_export[-1]["timestamp"]/1000)
     GeneratedTime = [TimeOrigin + timedelta(days=i) for i in range(Hyperparameters["prediction_steps"])]
     DeNormalizedPrediction["timestamp"] = GeneratedTime
-
-    #generate and assign random colors
     DeNormalizedPrediction = [dict(zip(DeNormalizedPrediction.keys(), values)) for values in zip(*DeNormalizedPrediction.values())]
-
-
-    #generate n colors for each variable
-    colors=[]
-    for _ in range(var_count):
-        rgb = np.random.randint(20, 256, size=3)
-        hex = "#{:02x}{:02x}{:02x}".format(*rgb)
-        colors.append(hex)
-
-    for i in range(Hyperparameters["prediction_steps"]):
-        DeNormalizedPrediction[i]["colorscheme"] = colors
-
-    colors=[]
-    for _ in range(var_count):
-        rgb = np.random.randint(20, 256, size=3)
-        hex = "#{:02x}{:02x}{:02x}".format(*rgb)
-        colors.append(hex)
-
-    for x in to_export:
-        x["colorscheme"] = colors
-
 
     Payload={
         "Prediction":to_export+DeNormalizedPrediction,
@@ -251,5 +228,6 @@ def CreateCustomModel():
         "payload":Payload,
         "error":None
     }
+
 if __name__=="__main__":
     SocketIO_Reference.run(app, debug=True)
