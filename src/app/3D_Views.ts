@@ -175,7 +175,7 @@ export class Interactables_3D{
         const GlobalPosition:THREE.Vector3 = new THREE.Vector3(X,10,15);
 
         const Quaternion:THREE.Quaternion = {
-            "LSTM Unidirectional":new THREE.Quaternion().setFromEuler(new THREE.Euler(Math.PI/2,0,Math.PI)),
+            "LSTM Unidirectional":new THREE.Quaternion().setFromEuler(new THREE.Euler((3*Math.PI)/2,0,0)),
             "GRU":new  THREE.Quaternion().setFromEuler(new THREE.Euler(0,(3*Math.PI)/2,0)),
             "Multi-Head Attention":new THREE.Quaternion().setFromEuler(new THREE.Euler(0,(3*Math.PI)/2,0)),
             "Dense": new THREE.Quaternion().setFromEuler(new THREE.Euler(0,(3*Math.PI)/2,0))
