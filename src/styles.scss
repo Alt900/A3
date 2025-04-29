@@ -6,5 +6,5 @@ html {
   @include mat.all-component-themes(m3-theme.$dark-theme);
 }
 
-html, body { height: 100%; overflow: hidden;}
+html, body { height: 100%; overflow: hidden; background-color: #191919;}
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }

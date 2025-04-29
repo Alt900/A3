@@ -1,15 +1,15 @@
 
 import os
 import json
-
+import pandas as pd
 import threading
-from flask import Flask,request, Response
+from flask import Flask,request
 from flask_socketio import SocketIO
 
 from PyPredict import ML,API_Interface,np, filesystem
 from datetime import datetime, timedelta
 #CPython
-from CPy_Lib import ReadJSON, CStats, Normalization
+from CPy_Lib import CStats, Normalization
 
 
 app_dir = os.getcwd()
@@ -81,52 +81,15 @@ def DownloadData():
         "error": None
     } 
 
-@app.route("/GetNews")
-def GetNews():
-    Obj = API_Interface.DataHandler()
-    tickers = [x.replace(" ","") for x in request.args.get("Tickers").split(',')]
-    Articles = []
-    for ticker in Obj.GetArticles(tickers):
-        Articles.append(ticker["news"])
-
-    return {
-        "payload":Articles,
-        "error":None
-    }
-
-@app.route("/api/FetchJSON",methods=['GET'])
-def FetchJSON():
-    ticker = f"./MarketData/{request.args.get('ticker')}_data.json"
-    JSON_String = ReadJSON.Fetch(ticker)
-    Marshalled=json.loads(JSON_String)
-
+@app.route("/api/FetchData")
+def FetchData():
+    Variables = request.args.get('Variables').split(",")
+    Variables.append("timestamp")
+    ExcludedVariables = [v for v in ["open","high","low","close","volume","timestamp"] if v not in Variables]
+    df = pd.read_json(f"./MarketData/{request.args.get('Ticker')}_data.json")
+    df = df.drop(ExcludedVariables,axis=1)
     return{ 
-        "payload":Marshalled,
-        "error":None
-    }
-
-@app.route("/LiveStockFeed")
-def LiveStockFeed():
-    Ticker = request.args.get("ticker",type=str)
-    def Stream():
-        while not LiveStopSignal.is_set():
-            Data = DH_Object.GetCurrentPrice(Ticker)
-            yield {
-                "payload": Data,
-                "error": None
-            }
-        yield {
-            "payload":"Stopped live stock stream",
-            "error":None
-        }
-
-    return Response(Stream(),content_type='text/event-stream')
-
-@app.route("/LiveFeedSignal",methods=['POST'])
-def LiveFeedSignal():
-    LiveStopSignal.set()
-    return{
-        "payload":f"Set live feed signal to {LiveStopSignal}",
+        "payload":json.loads(df.to_json(orient='records',date_format='iso',lines=False)),
         "error":None
     }
 

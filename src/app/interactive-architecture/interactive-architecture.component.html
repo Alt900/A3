@@ -1,14 +1,16 @@
 
+<!--D3 SVG and Three.js canvas-->
 <div class="D3Container" [ngStyle]="{'z-index': ChosenGraph==='3D Scene'?-10:0}">
     <svg #ArchSVGContainer class="D3Container"></svg>
 </div>
 <div #ArchContainer class="ArchContainer" [ngStyle]="{'z-index': ChosenGraph==='3D Scene'?0:-10}"></div>
-<div class="LayerParameterAnchor">
+<!--Layer parameter toolbar-->
+<div class="LayerParameterAnchor" *ngIf="ChosenGraph==='3D Scene'">
     <button *ngIf="LayerHyperParameters.SelectedLayer === LayerHyperParameters.LayerArgs.length-1 && LayerHyperParameters.SelectedLayer!==-1" mat-button class="RemoveLayer" (click)="LayerHyperParameters.RemoveLayer(LayerHyperParameters.SelectedLayer)">Remove Layer</button>
     <ng-container *ngIf="LayerHyperParameters.SelectedLayer!==-1" >
         <mat-label class="LayerLabel">{{LayerHyperParameters.LayerArgs[LayerHyperParameters.SelectedLayer]['layertype']}} Layer {{LayerHyperParameters.SelectedLayer}}</mat-label>
-        <div *ngFor="let Key of LayerHyperParameters.GetKeys(LayerHyperParameters.SelectedLayer); let i = index" class="LayerParameterInput" [style.top] = "CalculateTop(i+2,15)">
-            <mat-form-field class="M3LayerParameterInput" *ngIf="Key!=='layertype'">
+        <div *ngFor="let Key of LayerHyperParameters.GetKeys(LayerHyperParameters.SelectedLayer); let i = index" class="LayerParameterInput" [style.left] = "CalculateTop(i,15)">
+            <mat-form-field *ngIf="Key!=='layertype'">
                 <mat-label>{{Key.replaceAll("_"," ")}}</mat-label>
                 <input matInput *ngIf="typeof LayerHyperParameters.LayerArgs[LayerHyperParameters.SelectedLayer][Key] === 'number'"
                     [value]="LayerHyperParameters.LayerArgs[LayerHyperParameters.SelectedLayer][Key]"
@@ -25,6 +27,48 @@
     </ng-container>
 </div>
 
+<!--D3 toolbars-->
+<div class="D3ToolbarTop" *ngIf="ChosenGraph==='Data'">
+    <mat-form-field class="M3Dropdown" [style.left] = "CalculateTop(0,15)">
+        <mat-label>Variables:</mat-label>
+        <mat-select [(ngModel)]="HyperParameters.Settings['variables']" (ngModelChange)="HyperParameters.D3Rendering('variables',SVGReference.nativeElement)" multiple>
+            @for(Option of DropdownDispatcher['variables']; track Option){
+                <mat-option [value]="Option">{{Option.replaceAll("_"," ")}}</mat-option>
+            }
+        </mat-select>
+    </mat-form-field>
+    <mat-form-field class="M3Dropdown" [style.left] = "CalculateTop(1,15)">
+        <mat-label>Ticker:</mat-label>
+        <mat-select [(ngModel)]="HyperParameters.Settings['ticker']" (ngModelChange)="HyperParameters.D3Rendering('ticker',SVGReference.nativeElement)">
+            @for(Option of DropdownDispatcher['ticker']; track Option){
+                <mat-option [value]="Option">{{Option.replaceAll("_"," ")}}</mat-option>
+            }
+        </mat-select>
+    </mat-form-field>
+    <mat-form-field class="M3Dropdown" [style.left] = "CalculateTop(2,15)">
+        <mat-label>normalization:</mat-label>
+        <mat-select [(ngModel)]="HyperParameters.Settings['normalization']" (ngModelChange)="HyperParameters.D3Rendering('normalization',SVGReference.nativeElement)">
+            @for(Option of DropdownDispatcher['normalization']; track Option){
+                <mat-option [value]="Option">{{Option.replaceAll("_"," ")}}</mat-option>
+            }
+        </mat-select>
+    </mat-form-field>
+</div>
+
+<div class="D3ToolbarBottom" *ngIf="ChosenGraph==='Data'">
+    <!--Train test and validation split dual sliders-->
+    <mat-slider
+        [min]="0.01"
+        [max]="1"
+        step="0.01"
+        class="SplitRatioSlider"
+    >
+        <input [(ngModel)]="HyperParameters.StartRatio" (ngModelChange)="Graphs.MoveRatioRect(HyperParameters.StartRatio,HyperParameters.EndRatio)" matSliderStartThumb/>
+        <input [(ngModel)]="HyperParameters.EndRatio" (ngModelChange)="Graphs.MoveRatioRect(HyperParameters.StartRatio,HyperParameters.EndRatio)" matSliderEndThumb/>
+    </mat-slider>
+</div>
+
+<!--General navigation-->
 <div class="ArchitectureSettings">
     <div class="SettingsTabs">
         <button mat-button class="SettingsTab" (click)="SetSettings('GeneralHyperparameters')" style="left: 0;">Architecture</button>
@@ -87,6 +131,7 @@
         <button mat-button class="GraphOption" (click)="SetGraph('Loss')" style="top:12%">Loss</button>
         <button mat-button class="GraphOption" (click)="SetGraph('Prediction')" style="top:24%">Prediction</button>
         <button mat-button class="GraphOption" (click)="SetGraph('3D Scene')" style="top:36%">3D Scene</button>
+        <button mat-button class="GraphOption" (click)="SetGraph('Data')" style="top:48%">Data</button>
     </div>
 
     <div class="SettingsContainer" *ngIf="SelectedSetting==='GeneralHyperparameters'">

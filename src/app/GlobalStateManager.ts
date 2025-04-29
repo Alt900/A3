@@ -1,3 +1,5 @@
+import { Utils } from './utils';
+
 export interface DynamicInterface{[key:string]:any;}
 
 export interface DataStructure {
@@ -15,7 +17,9 @@ export interface PredictionData{
 
 export class HyperparameterInterface{
     static AvailableTickers:string[] = ['NULL'];
-
+    static D3_Reference:any;
+    static StartRatio:number = 0.7;
+    static EndRatio:number = 0.9;
     static Settings:DynamicInterface={
         normalization:"Logarithmic",
         variables:["open"],
@@ -32,7 +36,56 @@ export class HyperparameterInterface{
         prediction_steps:10
     }
 
+    private static NormalizationDispatcher:DynamicInterface = {
+      "Logarithmic":(Array:number[])=>{return Array.map((i:number)=>Math.log(i));},
+      "MinMax":(Array:number[])=>{
+        const Min:number = Math.min(...Array);
+        const Max:number = Math.max(...Array);
+        const Denominator:number = Max-Min;
+        return Array.map((i:number)=>(i-Min)/Denominator);
+        },
+      "Z_Score":(Array:number[])=>{
+        const Mean:number = Array.reduce((a:number,x:number)=>a+x,0)/Array.length;
+        const SD:number = Math.sqrt(Array.reduce((a:number,x:number)=>a+((x-Mean)**2),0)/Array.length);
+        return Array.map((i:number)=>(i-Mean)/SD);
+      }
+    }
+
     static SettignsKeys:string[]=Object.keys(this.Settings);
+
+    public static async D3Rendering(Key:string,SVGRef:SVGSVGElement):Promise<void>{
+      this.D3_Reference.ReloadSVG(SVGRef);
+      if(Key==="variables" || Key==="ticker"){
+        const Route:string = `FetchData?Variables=${this.Settings['variables']}&Ticker=${this.Settings['ticker']}`;
+        const Response:DataStructure[] = await Utils.FetchRoute(Route);
+        this.D3_Reference.ResetDataDescriptor(["ClassicData"]);
+        this.D3_Reference.ParseClassicDataResponse(Response);
+        this.D3_Reference.CleanSVG();
+        if(this.D3_Reference.DataDescriptor['ClassicData']['Data'][0].length == 4){
+          this.D3_Reference.DrawBarChart("ClassicData","Data",false);
+        }else{
+          this.D3_Reference.DrawPredictionMultivariate("ClassicData","Data",false);
+        }
+        this.D3_Reference.MoveRatioRect(this.StartRatio,this.EndRatio);
+      }else{//normalization
+        let Min:number = 0;
+        let Max:number = 0;
+        this.D3_Reference.DataDescriptor["ClassicData"]["Data"].forEach((Array:number[],Index:number) => {
+          const Normalized:number[] = this.NormalizationDispatcher[this.Settings["normalization"]](Array);
+          this.D3_Reference.DataDescriptor["ClassicData"]["NormalizedData"][Index] = Normalized;
+          Min = Math.min(...Normalized);
+          Max = Math.max(...Normalized);
+        });
+        this.D3_Reference.DataDescriptor["ClassicData"]["NormalizedMin"] = Min;
+        this.D3_Reference.DataDescriptor["ClassicData"]["NormalizedMax"] = Max;
+        this.D3_Reference.CleanSVG();
+        if(this.D3_Reference.DataDescriptor['ClassicData']['Data'][0].length == 4){
+          this.D3_Reference.DrawBarChart("ClassicData","NormalizedData",false);
+        } else {
+          this.D3_Reference.DrawPredictionMultivariate("ClassicData","NormalizedData",false);
+        }
+      }
+    }
 
     public static ReRender():void{
         this.Settings = {...this.Settings}

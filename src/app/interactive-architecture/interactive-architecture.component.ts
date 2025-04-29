@@ -31,6 +31,7 @@ import {MatSelectModule} from '@angular/material/select';
 import {MatCheckboxModule} from '@angular/material/checkbox';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatListModule} from '@angular/material/list';
+import {MatSliderModule} from '@angular/material/slider';
 
 @Component({
   selector: 'app-interactive-architecture',
@@ -44,7 +45,8 @@ import {MatListModule} from '@angular/material/list';
     MatButtonModule,
     MatListModule,
     MatDatepickerModule,
-    MatCheckboxModule
+    MatCheckboxModule,
+    MatSliderModule
   ],
   providers:[provideNativeDateAdapter()],
   templateUrl: './interactive-architecture.component.html',
@@ -97,6 +99,7 @@ export class InteractiveArchitectureComponent implements AfterViewInit{
 
     Interactables_3D.InitializeScene(this.Height,this.Width,ParentDiv);
     LayerHyperparametersInterface.Three_Reference = Interactables_3D;
+    this.HyperParameters.D3_Reference = this.Graphs;
   }
 
   ngOnChanges(changes:SimpleChanges):void{
@@ -143,24 +146,23 @@ export class InteractiveArchitectureComponent implements AfterViewInit{
     this.Graphs.ReloadSVG(this.SVGReference.nativeElement);
     if(chosen === "Accuracy" || chosen === "Loss"){
       this.Graphs.DrawAccLossMultivariate(chosen);
-      this.ChosenGraph = "None";
     } else if(chosen === "Prediction"){
       if(this.Graphs.DataDescriptor["PredictionData"]["Data"].length == 4){
-        this.Graphs.DrawBarChart();
+        this.Graphs.DrawBarChart("PredictionData","Data",true);
       } else {
-        this.Graphs.DrawPredictionMultivariate();
+        this.Graphs.DrawPredictionMultivariate("PredictionData","Data",true);
       }
-      this.ChosenGraph = "None";
-    } else {
-      this.ChosenGraph = "3D Scene";
+    } else if(chosen === "Data"){
+      this.HyperParameters.D3Rendering("ticker",this.SVGReference.nativeElement);
     }
+    this.ChosenGraph=chosen;
   }
 
   async BuildRunArch():Promise<void>{
-    this.Graphs.ResetDataDescriptor();
+    this.Graphs.ResetDataDescriptor(["Loss","Accuracy","PredictionData"]);
     const ParameterizedRoute:string = `CreateModel?Hyperparams=${JSON.stringify(this.HyperParameters.Settings)}&LayerArgs=${JSON.stringify(this.LayerHyperParameters.LayerArgs)}`;
     const Data:PredictionData = await Utils.FetchRoute(ParameterizedRoute);
-    this.Graphs.ParsePyResponse(Data);
+    this.Graphs.ParsePredictionResponse(Data);
     this.SetGraph("Prediction");
   }
 }
