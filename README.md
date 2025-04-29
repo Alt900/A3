@@ -17,9 +17,6 @@ Peek is a web-based UI for machine learning predictions on stock data. This proj
 - Multi-head attention
 - Linear/Dense
 
-
-
-
 #### Hyperparameters:
 - Normalization method
 - Variables being predicted
@@ -86,11 +83,10 @@ On a fresh install, there won't be any JSON files containing market data to prov
 ![FilledDataDownload](public/data_download_filled.png)
 
 
+## Data chart
+Before training a network, you can optionally view the market data in a multivariate chart with a few controls. The first set of controls is at the top of the chart, controlling variables, ticker, and normalization. The chart is reactive to any changes made and will re-render with each corresponding change. The second set of controls is at the bottom of the chart, controlling the training, testing, and validation ratios, splitting up the data for the network. Note that when altering any parameters in the chart toolbars, they will automatically update the values in the right-hand menu.
 
-
-
-
-
+![DataViewGraph](public/DataViewGraph.png)
 
 ## Architecture and Three.js 3D Space
 After navigating to the architecture menu, there will be a few options to add layers populated below the menu navigation bar:
@@ -105,7 +101,7 @@ Once you click on a chosen layer, the layer will populate in the 3D space at the
 ![MHAMath](public/MHADetails.png)
 
 
-The layer recently added will automatically be the currently selected layer. To the right of the 3D space, there will be a sub-menu controlling the selected layer's parameters like cell count, dropout, activation, etc. If you choose to tune these parameters, the scene will re-render and reflect the changes, depending on whether it affects the shape of the layer. For example, each layer starts with 10 cells and 10 instanced 3D models for the layer to represent each cell. If you change the cell count to 15, there will now be 15 instanced 3D models representing the cell count. If you want to remove a layer, you will need to remove all preceding layers first, since you can only remove the last layer due to the sequential ordering of the network on the backend.
+The layer recently added will automatically be the currently selected layer. At the top of the 3D space, there will be a sub-menu controlling the selected layer's parameters like cell count, dropout, activation, etc. If you choose to tune these parameters, the scene will re-render and reflect the changes, depending on whether it affects the shape of the layer. For example, each layer starts with 10 cells and 10 instanced 3D models for the layer to represent each cell. If you change the cell count to 15, there will now be 15 instanced 3D models representing the cell count. If you want to remove a layer, you will need to remove all preceding layers first, since you can only remove the last layer due to the sequential ordering of the network on the backend.
 
 
 To move around in the 3D environment, use WASD to control forward, left, back, and right camera movement, the left mouse button to rotate the camera, and the shift key to speed up the WASD movement. There is also a raycaster built into the left mouse button to select different layers within the network to tune a targeted layer, to select another layer, just left click, and the changes will reflect on the parameter sub-menu.
@@ -116,8 +112,6 @@ To move around in the 3D environment, use WASD to control forward, left, back, a
 ### Basic network example:
 #### LSTM(12) -> LSTM(6) -> Linear(3)
 ![Hybrid1](public/Hybrid1.png)
-
-
 
 
 ### Considerations
