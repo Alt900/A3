@@ -72,10 +72,6 @@ export class InteractiveArchitectureComponent implements AfterViewInit{
   TickersToDownload:string[]=[];
 
   PredictionData:PredictionData={Accuracy:[[]],Loss:[[]],Prediction:[]};
-
-  Height:number = 0;
-  Width:number = 0;
-
   @ViewChild('ArchSVGContainer', { static: true }) SVGReference!: ElementRef<SVGSVGElement>;
   @ViewChild('ArchContainer',{static:true}) DivReference!: ElementRef<any>;
 
@@ -89,15 +85,13 @@ export class InteractiveArchitectureComponent implements AfterViewInit{
   }
 
   async ngAfterViewInit():Promise<void>{
-    const ParentDiv:HTMLDivElement = this.DivReference.nativeElement;
-    const Rect = ParentDiv.getBoundingClientRect();
-    
-    this.Width = Rect.width;
-    this.Height = Rect.height;
+    const ThreeContainer:HTMLDivElement = this.DivReference.nativeElement;
+    const ThreeRect = ThreeContainer.getBoundingClientRect();
+    const D3Container:SVGSVGElement = this.SVGReference.nativeElement;
+    const D3Rect = D3Container.getBoundingClientRect();
 
-    this.Graphs.Initialize(this.SVGReference.nativeElement,Rect.width,Rect.height);
-
-    Interactables_3D.InitializeScene(this.Height,this.Width,ParentDiv);
+    this.Graphs.Initialize(this.SVGReference.nativeElement,D3Rect.width,D3Rect.height);
+    Interactables_3D.InitializeScene(ThreeRect.height,ThreeRect.width,ThreeContainer);
     LayerHyperparametersInterface.Three_Reference = Interactables_3D;
     this.HyperParameters.D3_Reference = this.Graphs;
   }
@@ -138,6 +132,14 @@ export class InteractiveArchitectureComponent implements AfterViewInit{
     }
   }
 
+  HideShowTTV(checked:boolean):void{
+    if(checked===true){
+      this.Graphs.HideTTV();
+    } else {
+      this.Graphs.ShowTTV();
+    }
+  }
+
   CalculateLeft(i:number,modifier?:number):string{return `${i*(modifier===undefined?1:modifier)}%`}
   CalculateTop(i:number,modifier?:number):string{return `${i*(modifier===undefined?1:modifier)}%`}
 
@@ -145,7 +147,7 @@ export class InteractiveArchitectureComponent implements AfterViewInit{
     GraphManager.CleanSVG();
     this.Graphs.ReloadSVG(this.SVGReference.nativeElement);
     if(chosen === "Accuracy" || chosen === "Loss"){
-      this.Graphs.DrawAccLossMultivariate(chosen);
+      this.Graphs.DrawPredictionMultivariate(chosen,"Data",false);
     } else if(chosen === "Prediction"){
       if(this.Graphs.DataDescriptor["PredictionData"]["Data"].length == 4){
         this.Graphs.DrawBarChart("PredictionData","Data",true);

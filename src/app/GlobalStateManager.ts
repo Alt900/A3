@@ -61,7 +61,7 @@ export class HyperparameterInterface{
         this.D3_Reference.ResetDataDescriptor(["ClassicData"]);
         this.D3_Reference.ParseClassicDataResponse(Response);
         this.D3_Reference.CleanSVG();
-        if(this.D3_Reference.DataDescriptor['ClassicData']['Data'][0].length == 4){
+        if(this.D3_Reference.DataDescriptor['ClassicData']['Data'].length == 4){
           this.D3_Reference.DrawBarChart("ClassicData","Data",false);
         }else{
           this.D3_Reference.DrawPredictionMultivariate("ClassicData","Data",false);

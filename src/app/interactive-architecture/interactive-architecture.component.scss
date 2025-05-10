@@ -19,6 +19,12 @@
     border: 1px inset #646464;
 }
 
+.HideTTV{
+    position: absolute;
+    bottom: 0;
+    left: 45%;
+}
+
 .D3ToolbarBottom{
     position: absolute;
     bottom: 0;
@@ -92,10 +98,10 @@
 
 .D3Container{
     position: absolute;
-    top: 10%;
+    top: 5.5%;
     left: 0;
-    width: 88%;
-    height: 90%;
+    width: 89.2%;//89.2%
+    height: 94.5%;
     background-color: #191919;
 }
 
